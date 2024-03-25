@@ -1,5 +1,3 @@
-import qrcode
-import pyqrcode
 import base64
 from PIL import Image
 import os
@@ -13,17 +11,6 @@ def image_to_base64(image_path):
 
 def get_file_size(filename):
     return os.path.getsize('images/' + filename + '.webp')
-
-
-# Uses in built libraries to generate an existing image
-
-def generate_qr_code(text, filename='qr'):    
-    qr = pyqrcode.create(text)
-    return qr.png(filename + '.png', scale=10)
-
-def generate_qr_code_with_image(image_path):
-    base64_data = image_to_base64(image_path)
-    return generate_qr_code(base64_data)
 
 def compress_image(filename, compression=50):
     img = Image.open('images/' + filename + '.webp')
@@ -59,6 +46,7 @@ def encode_image(filename, show=True):
     image_text = image_to_base64('images/compressed/' + filename + '.webp')
     qr_matrix = np.zeros((1080, 1920, 3), dtype=np.uint8)
     qr_matrix = generate_qr_matrix(image_text, qr_matrix)
+    print(qr_matrix)
     cv2.imwrite('images/encoded/' + filename + '.png', qr_matrix)
 
     if show:
@@ -66,12 +54,11 @@ def encode_image(filename, show=True):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-def generate_video():
+def generate_video(output_path):
     images = [img for img in os.listdir('images/encoded') if img.endswith('.png')]
     images.sort()
 
-    video_name = 'output_video.mp4'
-    video_path = os.path.join('images', video_name)
+    video_path = os.path.join('images', output_path)
 
     fps = 25.0                  # frame rate in fps
     image_duration = 25         # duration of each image in frames
@@ -92,13 +79,8 @@ def generate_video():
 
 
 if __name__ == '__main__':
-    images = [img.split('.')[0] for img in os.listdir('images') if img.endswith('.webp')]
+    images = sorted([img.split('.')[0] for img in os.listdir('images') if img.endswith('.webp')])
     for image in images:
         compress_image(image)
         encode_image(image, show=False)
-    generate_video()
-
-    # encode_image('test_image_compressed')
-    # generate_video()
-
-    # generate_qr_code_with_image('images/test_image2_compressed.webp')
+    generate_video(output_path='output_video.mp4')
